@@ -1,0 +1,261 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Jekyll v3.8.5">
+    <title>Dashboard Template · Bootstrap</title>
+
+  
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.3.0/dist/chart.min.js"></script>
+
+
+
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+    </style>
+    <!-- Custom styles for this template -->
+    <!--link href="/dashboard.css" rel="stylesheet"-->
+  </head>
+  <body>
+ {% include 'unsc/navbar.html' %}
+<!--Start of Side Bar-->
+<div class="container-fluid">
+  <div class="row">
+    <nav class="col-md-2 d-none d-md-block bg-dark sidebar">
+      <div class="sidebar-sticky sticky-top">
+        <ul class="nav flex-column">
+          <li class="nav-item">
+            <a class="nav-link active" href="#">
+              <span data-feather="home"></span>
+              Dashboard <span class="sr-only">(current)</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">
+              <span data-feather="file"></span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'unsc:sanctions' %}">
+              <span data-feather="file"></span>
+              Create Sanction
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'unsc:create-officer' %}">
+              <span data-feather="shopping-cart"></span>
+              Create Compliance Officer
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'unsc:create-company' %}">
+              <span data-feather="users"></span>
+              Create Company
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'unsc:sanction-list' %}">
+              <span data-feather="bar-chart-2"></span>
+              Sanctions List
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'unsc:complianceOfficer-list' %}">
+              <span data-feather="bar-chart-2"></span>
+              Compliance Officer List
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'unsc:company-list' %}">
+              <span data-feather="layers"></span>
+              Company List
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <!--End of Side Bars-->
+
+    <!--Start of main screen -->
+    <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Dashboard</h1>
+      </div>
+
+      <div class="col-sm-8 col-12 container-fluid">
+        <div class="container-fluid">
+        <div class="col-md-12 col-12 container-fluid">
+        <div class="card-deck mb-4 text-center">
+
+          <div class="col-md-4 col-12">
+            <div class="card mb-4 shadow-sm">
+              <div class="card-body">
+                <h2 class="card-title">No of Companies</h2>
+                <p class="card-text" style="font-size:80px">{{no_comp}}</p>
+                <a href="#" class="btn btn-primary">Details</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 col-12">
+            <div class="card mb-4 shadow-sm">
+              <div class="card-body">
+                <h2 class="card-title">No of Sanctions</h2>
+                <p class="card-text" style="font-size:80px">{{no_sanctions}}</p>
+                <a href="#" class="btn btn-primary">Details</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 col-12">
+            <div class="card mb-4 shadow-sm">
+              <div class="card-body">
+                <h2 class="card-title">% Compliance</h2>
+                <p class="card-text" style="font-size:80px">{{comp_per}} %</p>
+                <a href="#" class="btn btn-primary">Details</a>
+            </div>
+          </div>
+        </div>
+        </div>
+        </div>
+      </div>
+    
+
+      <!--Start of dashbaord with charts-->
+      <div class="row">
+
+        <div class="col-md-6 col-12">
+          <div class="card" style="margin-top:30px">
+            <div class="card-body">
+              <!--canvas class="my-4 w-100" id="myChart" width="900" height="380"></canvas-->
+              <canvas  id="stats1" width="300" height="300"></canvas>
+                <script>
+                            var ctx = document.getElementById('stats1').getContext('2d');
+                            var myChart = new Chart(ctx, {
+                                type: 'bar',
+                                data: {
+                                    labels: [{% for key, value in neg_data.items %}'{{key}}',{% endfor %}],
+                                    datasets: [{
+                                        label: 'Negative Matches',
+                                        data: [{% for key, value in neg_data.items %}{{value}},{% endfor %}],
+                                        backgroundColor:
+                                            'rgba(255, 99, 132, 0.8)',
+                                        borderWidth: 1
+                                    },
+                                    {
+                                        label: 'Positive Matches',
+                                        data: [{% for key, value in pos_data.items %}{{value}},{% endfor %}],
+                                        backgroundColor:
+                                            'rgba(54, 162, 235, 0.8)',
+                                        borderWidth: 1
+                                    }]
+                                },
+                                options: {
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true
+                                        }
+                                    }
+                                }
+                            });
+                </script>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-12">
+        <div class="card" style="margin-top:30px">
+          <div class="card-body">
+            <canvas id="stats2" width="300" height="300"></canvas>
+            <script>
+                    var ctx = document.getElementById('stats2').getContext('2d');
+                    var myChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: [{% for key, value in exist_data.items %}'{{key}}',{% endfor %}],
+                            datasets: [{
+                                label: 'Compliance Percentage',
+                                data: [{% for key, value in exist_data.items %}{{value}},{% endfor %}],
+                                backgroundColor: [
+                                    'rgba(255, 99, 132, 0.8)',
+                                    'rgba(54, 162, 235, 0.8)',
+                                    'rgba(255, 206, 86, 0.2)',
+                                    'rgba(75, 192, 192, 0.2)',
+                                    'rgba(153, 102, 255, 0.2)',
+                                    'rgba(255, 159, 64, 0.2)'
+                                ],
+                                borderColor: [
+                                    'rgba(255, 99, 132, 1)',
+                                    'rgba(54, 162, 235, 1)',
+                                    'rgba(255, 206, 86, 1)',
+                                    'rgba(75, 192, 192, 1)',
+                                    'rgba(153, 102, 255, 1)',
+                                    'rgba(255, 159, 64, 1)'
+                                ],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+            </script>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--End of Dashboard-->
+
+    <!--Start of data table-->         
+      <h2>Oustanding Compliances</h2>
+      <div class="table-responsive">
+        <table class="table table-striped table-sm">
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Memo</th>
+              <th>Time Since Memo</th>
+              <th>Officer</th>
+              <th>Escalate</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for s in no_exist%}
+            <tr>
+              <td>{{s.company}}</td>
+              <td>{{s.memo}}</td>
+              <td>{{s.create_date|timesince}}</td>
+              <td>John Doe</td>
+              <td><a href="#" class="btn btn-primary">Notify</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </main>
+    <!--End of main sceeen-->
+  </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.9.0/feather.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
+        
+</html>

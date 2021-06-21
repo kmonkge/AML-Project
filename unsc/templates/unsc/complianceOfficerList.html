@@ -1,0 +1,36 @@
+ {% extends 'unsc/main.html' %}
+
+{% block content %}
+ <h2>List of Compliance Officers</h2>
+      <div class="table-responsive">
+        <table class="table table-striped table-sm">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>Email</th>
+              <th>Company</th>
+              <th>Work Number</th>
+              <th>Cellphone</th>
+              <th>Update/ Delete</td>
+            </tr>
+          </thead>
+          <tbody>
+          {% for c in compliance_officer %}
+            <tr>
+              <td>{{c.user.username}}</td>
+              <td>{{c.user.first_name}}</td>
+              <td>{{c.user.last_name}}</td>
+              <td>{{c.user.email}}</td>
+              <td>{{c.user.business_name}}</td>
+              <td>{{c.user.work_number}}</td>
+              <td>{{c.user.cellphone_number}}</td>
+              <td><a href="{% url 'unsc:complianceOfficer-update' c.id %}" class="btn btn-info">UPDATE</a> <a href="" class="btn btn-danger">DELETE</a> </td>
+              
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+    </div>
+{% endblock %}

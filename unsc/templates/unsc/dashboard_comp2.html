@@ -1,0 +1,98 @@
+{% extends 'unsc/main.html' %}
+
+{%block content%}
+
+{% include 'unsc/status.html' %}
+
+<br>
+<div class="row">
+  <div class="col-md-5">
+    <h5>COMPANIES</h5>
+    <hr>
+    <div class="card card-body">
+      <table class="table table-sm">
+        <tr>
+          <th>COMPANY</th>
+          <th>COMPANY TYPE</th>
+          <th>COMPLIANCE</th>
+        </tr>      
+        <tr>
+          <td>{{company.company_name}}</td>
+          <td>{{company.company_type}}</td>
+          <td>{{percentage}}</td>
+        </tr>        
+      </table>
+    </div>
+  </div>
+
+  <div class="col-md-7">
+    <h5>COMPLIANCE</h5>
+    <hr>
+    <div class="card card-body">
+      <table class="table table-sm">
+        <tr>
+          <th>UN MEMO</th>
+          <th>MEMO DATE</th>
+          <th>UN TYPE</th>
+          <th>MEMO DESCRIPTION</th>
+          <th>UPDATE</th>
+        </tr>
+        {% for list in comp_sanctions %}
+          <tr>
+            <td>{{list.memo}}</td>
+            <td>{{list.create_date|date:'Y-m-d'}}</td>
+            <td>{{list.memo_type}}</td>
+            <td>{{list.description}}</td>
+            <td><a class="btn btn-sm btn-success" href="{% url 'unsc:updateForm' list.id  %}">Update</a></td>
+
+            <td></td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+</div>
+<br>
+
+
+  <div class="col-md">
+    <h5>Non Compliance List</h5>
+    <div class="card card-body">
+      <table class="table table-sm">
+        <tr>
+            <th>UN MEMO</th>
+            <th>MEMO DATE</th>
+            <th>DURATION</th>
+            <th>UN TYPE</th>
+            <th>UN DESCRIPTION</th>
+            <th>COMPLY</th>
+        </tr>
+        {% for non in non_comply %}
+          <tr>
+            <td>{{non.memo_name}}</td>
+            <td>{{non.create_date}}</td>
+            <td>{{non.create_date|timesince}}</td>
+            <td>{{non.memo_type}}</td>
+            <td>{{non.description}}</td>
+            <td><a class="btn btn-sm btn-info" 
+                href="{% url 'unsc:comply' company.slug non.slug %}">Comply</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div> 
+  </div>
+
+  <br>
+  <div`class="row">
+    <div class="col">
+      <div class="card card-body">
+        <form method="get">
+          {{myfilter.form}}
+          <button class="btn btn-primary" type="submit">Search</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+{%endblock%}

@@ -1,0 +1,204 @@
+from django.db.models import fields
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Company, UNSCList, Regulator, UNSCType, CompanyType, Compliance, ComplianceOfficer, User, UNSCMemoTableFunction
+from .forms import ComplianceForm, PositiveComplianceForm, UNSCListForm
+from .filters import *
+from django.forms import inlineformset_factory
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from urllib.parse import urlencode
+from notification.views import create_notification
+from django.utils.text import slugify
+# Create your views here.
+
+
+def index(request):
+    companies = Company.objects.all()
+
+    return render(request, 'unsc/index.html')
+
+
+def company_dashboard(request, slug):
+    company = get_object_or_404(Company, slug=slug, is_active=True)
+
+
+    sanctions = UNSCList.objects.all()
+    comply_all = Compliance.objects.all()
+   
+    #compliances related to the company and list to get memo from UNSCList
+    comply_list =[]
+    company_comp = Compliance.objects.filter(company= company.id).filter(is_complete=True).order_by('-create_date')
+    if len(company_comp):
+        for com in company_comp:
+                comply_list.append(sanctions.get(memo_name=com.memo_name))
+        print('the unlist:', comply_list)
+
+    # Non compliance
+    non_comply = []
+    for sac in sanctions:
+        if sac not in comply_list:
+            non_comply.append(sac)
+
+   # statutes count
+    total_sanctions = sanctions.count()
+    comply_count = len(comply_list)
+    non_comply_count = len(non_comply)
+
+    # compliance stat
+    percentage = 0
+    if total_sanctions > 0:
+        percentage = round(((comply_count/total_sanctions)*100),2)
+
+    #print('Percentage %:', percentage)
+
+    # Search Function
+    myfilter = ComplianceFilter(request.GET, queryset=company_comp )
+
+
+    context = {'company': company, 'company_comp': company_comp, 
+                'non_comply': non_comply, 'comply_list': comply_list, 
+                'total_sanctions': total_sanctions, 'comply_count': comply_count,
+                'non_comply_count': non_comply_count, 'percentage': percentage, 'myfilter': myfilter}
+    #context = {'company': company}
+    return render(request, 'unsc/dashboard_comp.html', context)
+
+
+def createSanction(request):
+    sanction_form = UNSCListForm
+
+    if request.method == 'POST':
+        sanction_form = UNSCListForm(request.POST)
+        if sanction_form.is_valid:
+            sanction = sanction_form.save(commit=False)
+            sanction.created_by = request.user
+            sanction.slug = slugify(sanction.memo_name)
+            sanction.save()
+            notification = f'sanction {sanction.memo_name} has been created.  Please acknowledge receipt by completing the compliance request'
+            print('I have saved the sanction object and created the message')
+            for user in User.objects.all().exclude(username='admin'):
+                create_notification(request, to_user=user, notification_type='INDIVIDUAL', extra_id=sanction.slug, message=notification, created_by=request.user)
+            return redirect('unsc:index')
+
+    context = {'sanction_form': sanction_form}
+    return render(request, 'unsc/sanctions.html', context)
+
+
+def createCompliance(request, slug1, slug2):
+
+    name = get_object_or_404(UNSCList, slug=slug2)
+    comp = get_object_or_404(Company, slug=slug1)
+    officer_name = get_object_or_404(ComplianceOfficer, company=comp.id)
+
+    c_form = ComplianceForm
+
+    if request.method == 'POST':
+        c_form = ComplianceForm(request.POST)
+        
+        if c_form.is_valid:
+            record = c_form.save(commit=False)
+            record.memo_name = name
+            record.company = comp
+            record.officer = officer_name
+            record.created_by = request.user
+            record.save()
+            print('Getting the form id:', record.id)
+            print('The cleaned data is:', c_form.cleaned_data)
+            data = c_form.cleaned_data.get('match')
+            if data == 'Positive Match' or 'Possible Match':
+                base_url = reverse('unsc:positive')
+                query_string = urlencode({'pk': record.id})
+                url = '{}?{}'.format(base_url, query_string)
+                return redirect(url)
+            return redirect('unsc:company', slug=slug1)
+
+    context = {'c_form': c_form,}
+    return render(request, 'unsc/create_compliance.html', context)
+
+
+def positiveCompliance(request):
+    comply_id = request.GET.get('pk')
+    compliance = get_object_or_404(Compliance, id=comply_id)
+    slug1 = compliance.company.slug
+    #slug1 = company.slug
+    print('compliance is:', compliance)
+
+    ComplianceFormSet = inlineformset_factory(Compliance, PositiveCompliance, fields=('unsc_reference_number',
+                        'list_type','list_name_1','list_name_2', 'list_name_3','action', 
+                        'information','is_complete'))
+
+
+    form = ComplianceFormSet()
+
+    if request.method == 'POST':
+        print('have entered post method')
+        
+        form = ComplianceFormSet(request.POST)
+        if form.is_valid():
+            print('form is valid')
+            record = form.save(commit=False)
+            record.compliance = compliance
+            record.company = compliance.company
+            record.officer = compliance.officer
+            record.created_by = request.user
+            record.save()         
+            return redirect('unsc:company', slug=slug1)
+        else:
+            print('There is an error')
+
+    context= {'form': form}
+    return render(request, 'unsc/positive_compliance.html', context)
+
+
+
+def updateCompliance(request, pk):
+    comply = get_object_or_404(Compliance, id=pk)
+    # comp = comply.company
+    comp = get_object_or_404(Company, id=comply.company.id)
+    form = ComplianceForm(instance=comply)
+    print('company slug:', comp.slug)
+    if request.method == 'POST':
+        form = ComplianceForm(request.POST, instance=comply)
+        if form.is_valid():
+            form.save()
+            return redirect('unsc:company', slug=comp.slug)
+    
+    context = {'form': form}
+    return render(request, 'unsc/compliance.html', context)
+
+'''
+def loginPage(request):
+
+    if request.method == 'POST':
+        username =  request.POST.get('username')
+        passwd = request.POST.get('password')
+        office = get_object_or_404(ComplianceOfficer, email_address=username)
+        company = get_object_or_404(Company, company_name=office.company)
+
+        user = authenticate(request, username=username, password=passwd)
+                    
+       
+        if user is not None:
+          
+            officer = ComplianceOfficer.objects.get(email_address=username)
+            company = Company.objects.get(company_name=office.company)
+            login(request, user)
+            return redirect('unsc:company', slug=company.slug)
+        
+        else:
+           messages.info(request, 'Username OR Password is incorrect')
+           return redirect('unsc:loginPage')
+    
+    context = {}
+    return render(request, 'unsc/login.html', context)
+
+'''
+def logoutUser(request):
+    logout(request)
+    return redirect('login')
+
+
+
+
+
+
+    

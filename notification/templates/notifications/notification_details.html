@@ -1,0 +1,31 @@
+{% extends 'unsc/main.html' %}
+{% block content %}
+<br>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            <div class="card card-body">
+                <h1 class="title">Notifications</h1>
+
+                {% if not notifications %}
+                    No notifications yet!
+                {% endif %}
+
+               
+                    <div class="notification">
+                    <p>
+                        <a href="{% url 'unsc:comply' comp.slug note.extra_id %}" class="note">
+                            <strong>{{note.created_by.username}}</strong> sent you a message<br>
+                            <small>{{note.message}}</small>
+                            <small>This was sent {{note.create_date|timesince}} ago</small>
+                        </a>
+                    </p>
+                    </div>
+               
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

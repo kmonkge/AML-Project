@@ -1,0 +1,32 @@
+ {% extends 'unsc/main.html' %}
+
+{% block content %}
+ <h2>List of Sanctions</h2>
+      <div class="table-responsive">
+        <table class="table table-striped table-sm">
+          <thead>
+            <tr>
+              <th>Memo Name</th>
+              <th>Information</th>
+              <th>Create Date</th>
+              <th>Match</th>
+              <th>Complete</th>
+              <th>Update/ Delete</td>
+            </tr>
+          </thead>
+          <tbody>
+          {% for c in compliance %}
+            <tr>
+              <td>{{c.memo_name}}</td>
+              <td>{{c.information}}</td>
+              <td>{{c.create_date}}</td>
+              <td>{{c.match}}</td>
+              <td>{{c.is_complete}}</td>
+              <td><a href="{% url 'unsc:positiveCompliance-update' c.id %}" class="btn btn-info">UPDATE</a> <a href="" class="btn btn-danger">DELETE</a> </td>
+              
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+    </div>
+{% endblock %}
