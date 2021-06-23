@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"name": "unsc",
+			"path": "..\\..\\git_app\\unsc"
+		}
+	],
+	"settings": {}
+}
