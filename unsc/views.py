@@ -29,6 +29,7 @@ def company_processor(request):
     else:
         user_company = get_object_or_404(Company, company_name='Credit Check')
         return {'user_company':user_company}
+        
 @login_required(login_url='/login/')
 def index(request):
     companies = Company.objects.all()

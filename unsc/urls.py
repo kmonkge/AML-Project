@@ -13,8 +13,8 @@ app_name = 'unsc'
 
 
 urlpatterns = [
-    path('', views.index, name='index'),
-    path('home/',views.home, name='home'),
+    #path('', views.index, name='index'),
+    path('',views.home, name='home'),
     path('dashboard/', views.regulator_dashboard, name='dashboard'),
     path('dashboard/<slug:slug>/', views.company_dashboard, name='company'),
     #path('compliance/<slug:slug1>/<slug:slug2>/', views.compliance, name='complyForm'),
